@@ -1,0 +1,52 @@
+# ── Secrets (NEVER commit these) ──────────────────────────────
+.env
+*.pem
+*.key
+*.cert
+*.crt
+
+# ── Python ────────────────────────────────────────────────────
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# ── Node / Frontend ───────────────────────────────────────────
+node_modules/
+ui/dist/
+ui/.vite/
+npm-debug.log*
+
+# ── Storage (user data — stays on server) ─────────────────────
+storage/uploads/*
+storage/vectordb/*
+storage/models/*
+!storage/uploads/.gitkeep
+!storage/vectordb/.gitkeep
+!storage/models/.gitkeep
+
+# ── OS files ──────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ── Docker ────────────────────────────────────────────────────
+.docker/
+
+# ── IDE ───────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.iml
+
+# ── Logs ──────────────────────────────────────────────────────
+*.log
+logs/
+/tmp/

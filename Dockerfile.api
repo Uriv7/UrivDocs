@@ -1,0 +1,67 @@
+# ══════════════════════════════════════════════════════════════════════════════
+#  UrivDocs API — Production Dockerfile
+#  Multi-stage build: reduces final image size by ~40%
+#  Base: Python 3.12 slim
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── Stage 1: Dependency builder ───────────────────────────────────────────────
+FROM python:3.12-slim AS builder
+
+WORKDIR /build
+
+# System packages needed to compile/install Python deps
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Upgrade pip tools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install Python deps into a local prefix (keeps them separate from system)
+COPY requirements.txt .
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
+
+# ── Stage 2: Runtime image ────────────────────────────────────────────────────
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# Runtime system dependencies only (no build tools)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    ffmpeg \
+    libgl1 \
+    libglib2.0-0 \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy installed Python packages from builder
+COPY --from=builder /install /usr/local
+
+# Copy application source code
+COPY . .
+
+# Create persistent storage directories
+RUN mkdir -p storage/uploads storage/vectordb storage/models
+
+# Run as non-root for security
+RUN useradd -m -u 1000 appuser \
+    && chown -R appuser:appuser /app
+USER appuser
+
+# Expose API port
+EXPOSE 8000
+
+# Health check (Docker-native)
+HEALTHCHECK --interval=30s --timeout=15s --start-period=120s --retries=5 \
+  CMD curl -sf http://localhost:8000/health || exit 1
+
+# IMPORTANT: 1 worker only — ChromaDB is a singleton and breaks with multiple workers
+CMD ["uvicorn", "api.main:app", \
+     "--host", "0.0.0.0", \
+     "--port", "8000", \
+     "--workers", "1", \
+     "--timeout-keep-alive", "300", \
+     "--access-log"]

@@ -1,0 +1,23 @@
+# Don't copy these into Docker image
+.env
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+.git/
+.github/
+node_modules/
+ui/dist/
+ui/node_modules/
+storage/uploads/*
+storage/vectordb/*
+storage/models/*
+*.log
+.DS_Store
+*.md
+tests/
+setup.sh
+start.sh
+start_ui.sh
+stop.sh
